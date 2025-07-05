@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,4 +19,7 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private String rol; // Puede ser 'admin' o 'user'
 } 

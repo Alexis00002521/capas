@@ -20,8 +20,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthRequest request) {
         try {
-            User user = userService.register(request.getUsername(), request.getPassword());
-            return ResponseEntity.ok(user);
+            userService.register(request.getUsername(), request.getPassword(), request.getRol());
+            return ResponseEntity.ok("Registrado correctamente");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -42,6 +42,7 @@ public class AuthController {
     public static class AuthRequest {
         private String username;
         private String password;
+        private String rol; // Nuevo campo para el rol
     }
 
     @Data

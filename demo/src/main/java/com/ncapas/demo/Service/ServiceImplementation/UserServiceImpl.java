@@ -15,12 +15,12 @@ public class UserServiceImpl implements iUserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public User register(String username, String password) {
+    public User register(String username, String password, String rol) {
         if (userRepository.findByUsername(username) != null) {
             throw new RuntimeException("El usuario ya existe");
         }
         String hashed = passwordEncoder.encode(password);
-        User user = User.builder().username(username).password(hashed).build();
+        User user = User.builder().username(username).password(hashed).rol(rol).build();
         return userRepository.save(user);
     }
 
