@@ -6,6 +6,7 @@ import com.ncapas.actividadl3capasv.Domain.DTOs.CreateAdminDTO;
 import com.ncapas.actividadl3capasv.repository.iAdminRepository;
 import com.ncapas.actividadl3capasv.service.iAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,9 @@ public class AdminServiceImpl implements iAdminService {
     @Autowired
     private iAdminRepository adminRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Admin createAdmin(CreateAdminDTO createAdminDTO) {
         // Validar que el username no exista
@@ -28,7 +32,7 @@ public class AdminServiceImpl implements iAdminService {
         
         Admin admin = new Admin();
         admin.setUsername(createAdminDTO.getUsername());
-        admin.setPassword(createAdminDTO.getPassword());
+        admin.setPassword(passwordEncoder.encode(createAdminDTO.getPassword()));
         admin.setPermissions(createAdminDTO.getPermissions());
         admin.setSuperAdmin(createAdminDTO.isSuperAdmin());
         admin.setCreatedBy(createAdminDTO.getCreatedBy());
@@ -64,7 +68,7 @@ public class AdminServiceImpl implements iAdminService {
         }
         
         if (updateAdminDTO.getPassword() != null) {
-            existingAdmin.setPassword(updateAdminDTO.getPassword());
+            existingAdmin.setPassword(passwordEncoder.encode(updateAdminDTO.getPassword()));
         }
         
         if (updateAdminDTO.getPermissions() != null) {
@@ -109,7 +113,7 @@ public class AdminServiceImpl implements iAdminService {
     @Override
     public boolean validateAdminCredentials(String username, String password) {
         Admin admin = adminRepository.findByUsername(username);
-        return admin != null && admin.getPassword().equals(password);
+        return admin != null && passwordEncoder.matches(password, admin.getPassword());
     }
 
     @Override

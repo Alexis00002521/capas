@@ -17,4 +17,9 @@ public class VideoGameServiceImpl implements iVideoGameService {
     public VideoGame createVideoGame(VideoGame videoGame) {
         return videoGameRepository.save(videoGame);
     }
+
+    @Override
+    public java.util.List<VideoGame> getAllVideoGames() {
+        return videoGameRepository.findAll();
+    }
 }

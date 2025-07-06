@@ -7,6 +7,7 @@ import com.ncapas.actividadl3capasv.repository.iRoleRepository;
 import com.ncapas.actividadl3capasv.util.AuthorizationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -26,6 +27,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private AuthorizationUtil authorizationUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -62,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
         if (!adminRepository.existsByUsername("superadmin")) {
             Admin superAdmin = new Admin();
             superAdmin.setUsername("superadmin");
-            superAdmin.setPassword("admin123"); // En producción, esto debería estar hasheado
+            superAdmin.setPassword(passwordEncoder.encode("admin123")); // En producción, esto debería estar hasheado
             superAdmin.setPermissions(authorizationUtil.getSuperAdminPermissions());
             superAdmin.setSuperAdmin(true);
             superAdmin.setCreatedBy("SYSTEM");
@@ -75,13 +79,26 @@ public class DataInitializer implements CommandLineRunner {
         if (!adminRepository.existsByUsername("admin")) {
             Admin admin = new Admin();
             admin.setUsername("admin");
-            admin.setPassword("admin123");
+            admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setPermissions(authorizationUtil.getSuperAdminPermissions());
             admin.setSuperAdmin(false);
             admin.setCreatedBy("SYSTEM");
             
             adminRepository.save(admin);
             System.out.println("✅ Administrador creado: admin / admin123");
+        }
+
+        // Crear Alexis como super administrador si no existe
+        if (!adminRepository.existsByUsername("Alexis")) {
+            Admin alexis = new Admin();
+            alexis.setUsername("Alexis");
+            alexis.setPassword(passwordEncoder.encode("Ale123456"));
+            alexis.setPermissions(authorizationUtil.getSuperAdminPermissions());
+            alexis.setSuperAdmin(true);
+            alexis.setCreatedBy("SYSTEM");
+            
+            adminRepository.save(alexis);
+            System.out.println("✅ Super administrador Alexis creado: Alexis / Ale123456");
         }
     }
 } 

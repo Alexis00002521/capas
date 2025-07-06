@@ -11,6 +11,8 @@ import com.ncapas.actividadl3capasv.util.AuthorizationUtil;
 import com.ncapas.actividadl3capasv.util.ApiResponse;
 import com.ncapas.actividadl3capasv.util.ApiConstants;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -26,93 +28,43 @@ public class UsersController {
     private AuthorizationUtil authorizationUtil;
 
     @PostMapping(ApiConstants.USERS_CREATE)
-    public ResponseEntity<?> createUser(@RequestBody Users user, @RequestParam(required = false) String currentUser) {
-        try {
-            // Verificar autorización - solo super admin puede crear usuarios
-            if (!authorizationUtil.canCreateUsers(getCurrentUser(currentUser))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden crear usuarios."));
-            }
-            
-            Users createdUser = usersService.createUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse(false, "Error al crear usuario: " + e.getMessage()));
-        }
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasAuthority('USER_CREATE')")
+    public ResponseEntity<?> createUser(@RequestBody Users user) {
+        Users createdUser = usersService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
     @GetMapping(ApiConstants.USERS_GET_BY_ID)
-    public ResponseEntity<?> getUserById(@PathVariable UUID id, @RequestParam(required = false) String currentUser) {
-        try {
-            // Verificar autorización - solo super admin puede ver usuarios específicos
-            if (!authorizationUtil.canReadUsers(getCurrentUser(currentUser))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden ver usuarios."));
-            }
-            
-            Users user = usersService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse(false, "Usuario no encontrado"));
-        }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
+        Users user = usersService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping(ApiConstants.USERS_GET_ALL)
-    public ResponseEntity<?> getAllUsers(@RequestParam(required = false) String currentUser) {
-        // Verificar autorización - solo super admin puede ver todos los usuarios
-        if (!authorizationUtil.canReadUsers(getCurrentUser(currentUser))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden ver usuarios."));
-        }
-        
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getAllUsers() {
         List<Users> users = usersService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @PutMapping(ApiConstants.USERS_UPDATE)
-    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody Users user, @RequestParam(required = false) String currentUser) {
-        try {
-            // Verificar autorización - solo super admin puede actualizar usuarios
-            if (!authorizationUtil.canUpdateUsers(getCurrentUser(currentUser))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden actualizar usuarios."));
-            }
-            
-            Users updatedUser = usersService.updateUser(id, user);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse(false, "Error al actualizar usuario: " + e.getMessage()));
-        }
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasAuthority('USER_UPDATE')")
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody Users user) {
+        Users updatedUser = usersService.updateUser(id, user);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping(ApiConstants.USERS_DELETE)
-    public ResponseEntity<?> deleteUser(@PathVariable UUID id, @RequestParam(required = false) String currentUser) {
-        try {
-            // Verificar autorización - solo super admin puede eliminar usuarios
-            if (!authorizationUtil.canDeleteUsers(getCurrentUser(currentUser))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden eliminar usuarios."));
-            }
-            
-            usersService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse(false, "Usuario no encontrado"));
-        }
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasAuthority('USER_DELETE')")
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
+        usersService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping(ApiConstants.USERS_GET_BY_USERNAME)
-    public ResponseEntity<?> getUserByUsername(@PathVariable String username, @RequestParam(required = false) String currentUser) {
-        // Verificar autorización - solo super admin puede buscar usuarios por username
-        if (!authorizationUtil.canReadUsers(getCurrentUser(currentUser))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse(false, "Acceso denegado. Solo super administradores pueden buscar usuarios."));
-        }
-        
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
         Users user = usersService.getUserByUsername(username);
         if (user != null) {
             return ResponseEntity.ok(user);

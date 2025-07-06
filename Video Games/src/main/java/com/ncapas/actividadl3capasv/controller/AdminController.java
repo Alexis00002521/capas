@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(ApiConstants.ADMIN_BASE_PATH)
@@ -24,6 +25,7 @@ public class AdminController {
 
     // Endpoints CRUD básicos
     @PostMapping(ApiConstants.ADMIN_CREATE)
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Admin>> createAdmin(@RequestBody CreateAdminDTO createAdminDTO) {
         try {
             Admin createdAdmin = adminService.createAdmin(createAdminDTO);
@@ -41,6 +43,7 @@ public class AdminController {
     }
 
     @GetMapping(ApiConstants.ADMIN_GET_BY_ID)
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDTO>> getAdminById(@PathVariable UUID id) {
         try {
             AdminDTO admin = adminService.getAdminById(id);
@@ -58,6 +61,7 @@ public class AdminController {
     }
 
     @GetMapping(ApiConstants.ADMIN_GET_ALL)
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AdminDTO>>> getAllAdmins() {
         List<AdminDTO> admins = adminService.getAllAdmins();
         ApiResponse<List<AdminDTO>> response = ApiResponse.success(
@@ -69,6 +73,7 @@ public class AdminController {
     }
 
     @PutMapping(ApiConstants.ADMIN_UPDATE)
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Admin>> updateAdmin(@PathVariable UUID id, @RequestBody CreateAdminDTO updateAdminDTO) {
         try {
             Admin updatedAdmin = adminService.updateAdmin(id, updateAdminDTO);
@@ -86,6 +91,7 @@ public class AdminController {
     }
 
     @DeleteMapping(ApiConstants.ADMIN_DELETE)
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteAdmin(@PathVariable UUID id) {
         try {
             adminService.deleteAdmin(id);
@@ -102,6 +108,7 @@ public class AdminController {
 
     // Endpoints específicos de administradores
     @GetMapping(ApiConstants.ADMIN_GET_BY_USERNAME)
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDTO>> getAdminByUsername(@PathVariable String username) {
         AdminDTO admin = adminService.getAdminByUsername(username);
         if (admin != null) {
@@ -121,6 +128,7 @@ public class AdminController {
 
 
     @GetMapping("/super")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AdminDTO>>> getSuperAdmins() {
         List<AdminDTO> superAdmins = adminService.getSuperAdmins();
         ApiResponse<List<AdminDTO>> response = ApiResponse.success(
@@ -132,6 +140,7 @@ public class AdminController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AdminDTO>>> getActiveAdmins() {
         List<AdminDTO> activeAdmins = adminService.getActiveAdmins();
         ApiResponse<List<AdminDTO>> response = ApiResponse.success(
@@ -144,6 +153,7 @@ public class AdminController {
 
     // Endpoints de gestión de permisos y roles
     @PostMapping("/{id}/promote")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> promoteToSuperAdmin(@PathVariable UUID id) {
         try {
             adminService.promoteToSuperAdmin(id);
@@ -159,6 +169,7 @@ public class AdminController {
     }
 
     @PostMapping("/{id}/demote")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> demoteFromSuperAdmin(@PathVariable UUID id) {
         try {
             adminService.demoteFromSuperAdmin(id);
@@ -176,6 +187,7 @@ public class AdminController {
 
 
     @PutMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> updatePermissions(
             @PathVariable UUID id, 
             @RequestBody String permissions) {
@@ -192,23 +204,21 @@ public class AdminController {
         }
     }
 
-    // Endpoint de autenticación
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AdminDTO>> login(@RequestBody CreateAdminDTO loginDTO) {
-        if (adminService.validateAdminCredentials(loginDTO.getUsername(), loginDTO.getPassword())) {
-            AdminDTO admin = adminService.getAdminByUsername(loginDTO.getUsername());
-            adminService.updateLastLogin(admin.getId());
-            
-            ApiResponse<AdminDTO> response = ApiResponse.success(
-                "Login exitoso", 
-                admin
-            ).withPath("/api/admins/login");
-            
-            return ResponseEntity.ok(response);
-        } else {
-            ApiResponse<AdminDTO> errorResponse = ApiResponse.<AdminDTO>error("Credenciales inválidas")
-                .withPath("/api/admins/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-    }
+    // Eliminar el endpoint de autenticación específico de admins
+    // @PostMapping("/login")
+    // public ResponseEntity<ApiResponse<AdminDTO>> login(@RequestBody CreateAdminDTO loginDTO) {
+    //     if (adminService.validateAdminCredentials(loginDTO.getUsername(), loginDTO.getPassword())) {
+    //         AdminDTO admin = adminService.getAdminByUsername(loginDTO.getUsername());
+    //         adminService.updateLastLogin(admin.getId());
+    //         ApiResponse<AdminDTO> response = ApiResponse.success(
+    //             "Login exitoso", 
+    //             admin
+    //         ).withPath("/api/admins/login");
+    //         return ResponseEntity.ok(response);
+    //     } else {
+    //         ApiResponse<AdminDTO> errorResponse = ApiResponse.<AdminDTO>error("Credenciales inválidas")
+    //             .withPath("/api/admins/login");
+    //         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    //     }
+    // }
 } 
