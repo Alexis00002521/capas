@@ -9,6 +9,7 @@ import com.ncapas.actividadl3capasv.service.iUsersService;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UsersServiceImpl implements iUsersService {
@@ -16,12 +17,16 @@ public class UsersServiceImpl implements iUsersService {
     @Autowired
     private iUsersRepository usersRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Users createUser(Users user) {
         // Validar que el username no exista
         if (usersRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("El nombre de usuario ya existe");
         }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return usersRepository.save(user);
     }
 
@@ -49,7 +54,7 @@ public class UsersServiceImpl implements iUsersService {
         }
         
         if (user.getPassword() != null) {
-            existingUser.setPassword(user.getPassword());
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         
         if (user.getRoles() != null) {
